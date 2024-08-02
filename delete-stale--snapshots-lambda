@@ -1,0 +1,68 @@
+import boto3
+import botocore
+
+client = boto3.client('ec2')
+
+response = client.describe_snapshots(
+    OwnerIds=[
+        'self',
+    ],
+)
+
+#print(len(response['Snapshots']))
+i=0
+li=[]
+volnf=[]
+for s in response['Snapshots']:
+    while len(response['Snapshots']) > i:
+        li.append(response['Snapshots'][i]['SnapshotId'])
+        i=i+1
+print("snapshot ids", li)
+
+for item in li:
+    snap = client.describe_snapshots(
+        SnapshotIds=[
+            item,
+        ],
+    )
+    #print(snap['Snapshots'][0]['VolumeId'])
+    for volid in snap['Snapshots']:
+        #print(volid['VolumeId'])
+        try:
+            volcheck = client.describe_volumes(
+                VolumeIds=[
+                str(volid['VolumeId']),
+                ],
+            )
+            #print("volume info", volcheck)
+        except botocore.exceptions.ClientError:
+            volnf.append(volid['VolumeId'])
+        print("volnotfound", volnf)
+        
+
+amis = client.describe_images(
+   
+    Owners=[
+        'self',
+    ],
+)
+n=0
+amili=[]
+#print("AMi list is")
+
+#print(len(amis['Images']))
+
+while len(amis['Images']) > n:
+    resami = amis['Images'][n]['BlockDeviceMappings']
+    for snap in li:
+        for am in resami:
+            #print(am['Ebs'])
+            #print(am.values())
+            snapstr = str(snap) 
+            if snapstr in am['Ebs'].values():
+                #print(snap)
+                li.remove(snapstr)
+                #print(snap, "is in AMIs")
+                #print(li)
+
+    n=n+1
