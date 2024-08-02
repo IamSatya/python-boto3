@@ -13,6 +13,7 @@ response = client.describe_snapshots(
 i=0
 li=[]
 volnf=[]
+volsnap={}
 for s in response['Snapshots']:
     while len(response['Snapshots']) > i:
         li.append(response['Snapshots'][i]['SnapshotId'])
@@ -34,11 +35,14 @@ for item in li:
                 str(volid['VolumeId']),
                 ],
             )
+            volsnap[item] = volid['VolumeId']
             #print("volume info", volcheck)
         except botocore.exceptions.ClientError:
             volnf.append(volid['VolumeId'])
+            volsnap[item] = 'false'
         print("volnotfound", volnf)
-        
+        #print("volsnap dict", volsnap)
+
 
 amis = client.describe_images(
    
@@ -62,7 +66,22 @@ while len(amis['Images']) > n:
             if snapstr in am['Ebs'].values():
                 #print(snap)
                 li.remove(snapstr)
+                volsnap.pop(snapstr)
                 #print(snap, "is in AMIs")
                 #print(li)
 
     n=n+1
+
+#Deletion of Snapshots snippet
+print("volsnap dict", volsnap)
+
+for key in volsnap:
+    print(key, "==", volsnap[key])
+    if volsnap[key]=='false':
+        print("Deleting Snapshot", key)
+        delsnap = client.delete_snapshot(
+            SnapshotId= str(key),
+            DryRun=False
+        )
+        print(delsnap)
+        print("Deletion Completed for Snapshot", key)
