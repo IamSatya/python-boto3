@@ -1,1 +1,2 @@
-# python-boto3
+# THIS REPO CONTAINS PYTHON CODE FOR RUNNING AUTOMATED TASKS ON CLOUD
+## delete-stale--snapshots-lambda --> This file contains code for deleting stale snapshots on the AWS.
